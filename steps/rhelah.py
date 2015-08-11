@@ -269,22 +269,24 @@ def step_impl(context):
     assert fetch_result, "Error retrieving smoketest output"
 
     fetch_result = context.remote_cmd(cmd='fetch',
+                                      module_args='src=/var/qe/atomic_version.txt dest=%s/ flat=yes' % jenkins_ws)
+
+    assert fetch_result, "Error retrieving atomic version file"
+    
+    fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/atomic_smoke_failed dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving smoketest failure output"
-
 
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/rpm_initial_list.txt dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving inital RPM list"
 
-
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/rpm_upgraded_list.txt dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving upgraded RPM list"
-
 
 
 @given(u'the upgrade interrupt script is present')
