@@ -266,12 +266,25 @@ def step_impl(context):
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/atomic_smoke_output.txt dest=%s/ flat=yes' % jenkins_ws)
 
-    assert fetch_result, "Error retrieving the data collection output file"
+    assert fetch_result, "Error retrieving smoketest output"
 
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/atomic_smoke_failed dest=%s/ flat=yes' % jenkins_ws)
 
-    assert fetch_result, "Error retrieving the data collection failure file"
+    assert fetch_result, "Error retrieving smoketest failure output"
+
+
+    fetch_result = context.remote_cmd(cmd='fetch',
+                                      module_args='src=/var/qe/rpm_initial_list.txt dest=%s/ flat=yes' % jenkins_ws)
+
+    assert fetch_result, "Error retrieving inital RPM list"
+
+
+    fetch_result = context.remote_cmd(cmd='fetch',
+                                      module_args='src=/var/qe/rpm_upgraded_list.txt dest=%s/ flat=yes' % jenkins_ws)
+
+    assert fetch_result, "Error retrieving upgraded RPM list"
+
 
 
 @given(u'the upgrade interrupt script is present')
@@ -376,3 +389,21 @@ def step_impl(context, mountpoint):
     '''check whether atomic mount point does not exist'''
     filter_result = find_mount_point(context, mountpoint)
     assert filter_result is not None, "Error unmounted container still exists"
+
+
+@when(u'"{list_type}" RPM list is collected')
+def step_impl(context, list_type):
+    rpm_list_res = context.remote_cmd(cmd='shell',
+                                      module_args='rpm -qa | sort > /var/qe/rpm_%s_list.txt' %
+                                                  list_type)
+
+    assert rpm_list_res, "Error retrieving list of installed RPMs"
+
+
+@then(u'there is a text file with the "{list_type}" RPM list present')
+def step_impl(context, list_type):
+    file_res = context.remote_cmd(cmd='stat',
+                                  module_args='path=/var/qe/rpm_%s_list.txt' % list_type)
+
+    assert file_res, "The text file with the RPM list was not present"
+
