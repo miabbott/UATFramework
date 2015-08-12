@@ -416,7 +416,7 @@ def step_impl(context, list_type):
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/%s_rpm_list dest=%s/ flat=yes' % (list_type, jenkins_ws))
 
-    assert fetch_result, "Error retrieving %s RPM list" $ list_type
+    assert fetch_result, "Error retrieving %s RPM list" % list_type
 
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/%s_atomic_version dest=%s/ flat=yes' % (list_type, jenkins_ws))
