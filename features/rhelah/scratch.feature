@@ -31,7 +31,7 @@ Background: Atomic hosts are discovered
   Scenario: Collect the data about the upgraded system
       Given the data collection script is present
        When the data collection script is run
-       Then generated data files are retrieved
+       Then the generated data files are retrieved
 
   Scenario: Upgraded RPM list
        When "upgraded" RPM list is collected
