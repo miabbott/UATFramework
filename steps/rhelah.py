@@ -252,24 +252,27 @@ def step_impl(context):
     assert run_result, "Error while running data collection script"
 
 
-@then(u'the data collection output file is present')
+@then(u'the generated data files are retrieved')
 def step_impl(context):
+    jenkins_ws = os.getenv('WORKSPACE')
+    
     stat_result = context.remote_cmd(cmd='stat',
                                      module_args='path=/var/qe/atomic_smoke_output.txt')
 
     assert stat_result, "The data collection output file is missing"
-
-
-@then(u'the data collection output files are retrieved')
-def step_impl(context):
-    jenkins_ws = os.getenv('WORKSPACE')
+    
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/atomic_smoke_output.txt dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving smoketest output"
 
+    stat_result = context.remote_cmd(cmd='stat',
+                                     module_args='path=/var/qe/atomic_version')
+
+    assert stat_result, "The atomic version file is missing"
+    
     fetch_result = context.remote_cmd(cmd='fetch',
-                                      module_args='src=/var/qe/atomic_version.txt dest=%s/ flat=yes' % jenkins_ws)
+                                      module_args='src=/var/qe/atomic_version dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving atomic version file"
     
@@ -277,16 +280,6 @@ def step_impl(context):
                                       module_args='src=/var/qe/atomic_smoke_failed dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving smoketest failure output"
-
-    fetch_result = context.remote_cmd(cmd='fetch',
-                                      module_args='src=/var/qe/rpm_initial_list.txt dest=%s/ flat=yes' % jenkins_ws)
-
-    assert fetch_result, "Error retrieving inital RPM list"
-
-    fetch_result = context.remote_cmd(cmd='fetch',
-                                      module_args='src=/var/qe/rpm_upgraded_list.txt dest=%s/ flat=yes' % jenkins_ws)
-
-    assert fetch_result, "Error retrieving upgraded RPM list"
 
 
 @given(u'the upgrade interrupt script is present')
@@ -395,17 +388,38 @@ def step_impl(context, mountpoint):
 
 @when(u'"{list_type}" RPM list is collected')
 def step_impl(context, list_type):
+    ver_res = context.remote_cmd(cmd='shell',
+                                 module_args="atomic host status | grep \* | awk '{print $4}' > /var/qe/%s_atomic_version" % list_type)
+    
+    assert ver_res, "Error determining atomic host version"
+
     rpm_list_res = context.remote_cmd(cmd='shell',
-                                      module_args='rpm -qa | sort > /var/qe/rpm_%s_list.txt' %
+                                      module_args='rpm -qa | sort > /var/qe/%s_rpm_list' %
                                                   list_type)
 
     assert rpm_list_res, "Error retrieving list of installed RPMs"
 
 
-@then(u'there is a text file with the "{list_type}" RPM list present')
+@then(u'the text file with the "{list_type}" RPM list is retrieved')
 def step_impl(context, list_type):
+    jenkins_ws = os.getenv('WORKSPACE')
     file_res = context.remote_cmd(cmd='stat',
-                                  module_args='path=/var/qe/rpm_%s_list.txt' % list_type)
+                                  module_args='path=/var/qe/%s_rpm_list' % list_type)
 
-    assert file_res, "The text file with the RPM list was not present"
+    assert file_res, "The text file with the %s RPM list was not present" % list_type
+
+    file_res = context.remote_cmd(cmd='stat',
+                                  module_args='path=/var/qe/%s_atomic_version' % list_type)
+
+    assert file_res, "The text file with the %s atomic verstion was not present" % list_type
+
+    fetch_result = context.remote_cmd(cmd='fetch',
+                                      module_args='src=/var/qe/%s_rpm_list dest=%s/ flat=yes' % (list_type, jenkins_ws))
+
+    assert fetch_result, "Error retrieving %s RPM list" $ list_type
+
+    fetch_result = context.remote_cmd(cmd='fetch',
+                                      module_args='src=/var/qe/%s_atomic_version dest=%s/ flat=yes' % (list_type, jenkins_ws))
+
+    assert fetch_result, "Error retrieving %s atomic version file"
 

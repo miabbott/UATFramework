@@ -6,7 +6,7 @@ Background: Atomic hosts are discovered
 
   Scenario: Initial RPM list
        When "initial" RPM list is collected
-       Then there is a text file with the "initial" RPM list present
+       Then the text file with the "initial" RPM list is retrieved
 
   Scenario: Subscribe to production
       When "all" host is auto-subscribed to "stage"
@@ -31,10 +31,9 @@ Background: Atomic hosts are discovered
   Scenario: Collect the data about the upgraded system
       Given the data collection script is present
        When the data collection script is run
-       Then the data collection output file is present
+       Then generated data files are retrieved
 
   Scenario: Upgraded RPM list
        When "upgraded" RPM list is collected
-       Then there is a text file with the "upgraded" RPM list present
-       and the data collection output files are retrieved
+       Then the text file with the "upgraded" RPM list is retrieved
 
