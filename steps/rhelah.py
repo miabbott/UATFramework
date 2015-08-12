@@ -257,12 +257,12 @@ def step_impl(context):
     jenkins_ws = os.getenv('WORKSPACE')
     
     stat_result = context.remote_cmd(cmd='stat',
-                                     module_args='path=/var/qe/atomic_smoke_output.txt')
+                                     module_args='path=/var/qe/atomic_smoke_output')
 
     assert stat_result, "The data collection output file is missing"
     
     fetch_result = context.remote_cmd(cmd='fetch',
-                                      module_args='src=/var/qe/atomic_smoke_output.txt dest=%s/ flat=yes' % jenkins_ws)
+                                      module_args='src=/var/qe/atomic_smoke_output dest=%s/ flat=yes' % jenkins_ws)
 
     assert fetch_result, "Error retrieving smoketest output"
 
