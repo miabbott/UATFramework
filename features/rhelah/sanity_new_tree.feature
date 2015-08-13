@@ -32,7 +32,7 @@ Background: Atomic hosts are discovered
 
   Scenario: 6. Gather initial RPM list
        When "initial" RPM list is collected
-       Then there is a text file with the "initial" RPM list present
+       Then the text file with the "initial" RPM list is retrieved
 
   Scenario: 7. 'atomic host upgrade' is successful
       Given there is "2" atomic host tree deployed
@@ -47,13 +47,12 @@ Background: Atomic hosts are discovered
 
   Scenario: 9. Gather upgraded RPM list
        When "upgraded" RPM list is collected
-       Then there is a text file with the "upgraded" RPM list present
+       Then the text file with the "upgraded" RPM list is retrieved
 
   Scenario: 10. Collect the data about the upgraded system
       Given the data collection script is present
        When the data collection script is run
-       Then the data collection output file is present
-        and the data collection output files are retrieved
+       Then the generated data files are retrieved
 
   Scenario: 11. Rollback to the original deployment
       Given there is "2" atomic host tree deployed
