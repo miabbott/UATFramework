@@ -283,7 +283,7 @@ def step_impl(context):
                                      module_args='path=/var/qe/atomic_smoke_output.txt')
 
     assert stat_result, "The data collection output file is missing"
-    
+
     fetch_result = context.remote_cmd(cmd='fetch',
                                       module_args='src=/var/qe/atomic_smoke_output.txt dest=%s/ flat=yes' % jenkins_ws)
 
