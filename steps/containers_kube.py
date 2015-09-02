@@ -112,8 +112,12 @@ def step_impl(context):
     else:
         assert False
 
-@when('docker build an image from "{Dockerfile}"')
-def step_impl(context, dockerfile):
+@when('docker build an image from "{dockerfile}"')
+@when('docker build an image with tag "{tag}" from "{dockerfile}"')
+def step_impl(context, dockerfile, tag=''):
     '''Build an image from a Dockerfile'''
+    module_args = 'docker build'
+    if tag:
+        module_args += ' -t %s' % tag
     assert context.remote_cmd('command',
-                               module_args='docker build %s' % dockerfile)
+                               module_args='%s %s' % (module_args, dockerfile))
