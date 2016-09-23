@@ -1,9 +1,9 @@
 '''ostree test methods'''
 
 import os
-import re
 import time
 import filecmp
+import json
 from behave import *
 from distutils.version import LooseVersion
 from docker import get_image_id_by_name, get_running_container_id, string_to_bool
@@ -12,71 +12,43 @@ from ostree import get_ostree_admin_status
 
 def get_atomic_version(context):
     atomic_status = get_atomic_status(context)
-    atomic_version = ""
-    for item in atomic_status:
-        if item['selected']:
-            atomic_version = item['version']
-            break
+    for d in atomic_status['deployments']:
+        if d['booted']:
+            return d['version']
 
-    return atomic_version
 
 def get_atomic_status(context):
     status_result = context.remote_cmd(cmd='command',
-                                       module_args='atomic host status')
+                                       module_args='atomic host status --json')
 
     assert status_result, "Error running 'atomic host status'"
 
-
-    status_re = re.compile(r'(?P<timestamp>.*?\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
-                           r' {5}(?P<version>\S+)'
-                           r' +(?P<id>\w{10})'
-                           r' {5}(?P<osname>[\w\-]+)'
-                           r' {5}(?P<refspec>[\w:\-/]+)')
-
-    atomic_host_status = []
-    context.atomic_host_status = ""
-    for item in status_result:
-        context.atomic_host_status += item['stdout']
-        for l in item['stdout'].split('\n'):
-            tmp = status_re.search(l)
-            if tmp:
-                tmp_dict = tmp.groupdict()
-                timestamp = tmp_dict['timestamp']
-                if re.match("\*", timestamp):
-                    tmp_dict['selected'] = True
-                    tmp_dict['timestamp'] = re.findall('\*\s+(.*)',
-                                                       timestamp)[0]
-                else:
-                    tmp_dict['selected'] = False
-                    tmp_dict['timestamp'] = timestamp.strip()
-                atomic_host_status.append(tmp_dict)
-
-    return atomic_host_status
+    return json.loads(status_result)
 
 
 def is_select_old_version(context):
     atomic_status = get_atomic_status(context)
-    time_format = '%Y-%m-%d %H:%M:%S'
 
-    for item in atomic_status:
-        if item['selected']:
-            current_version = LooseVersion(item['version'])
-            current_timestamp = time.strptime(item['timestamp'], time_format)
+    # treat versions as LooseVersion objects, timestamps are UNIX timestamps
+    for d in atomic_status['deployments']:
+        if d['booted']:
+            booted_version = LooseVersion(atomic_status['deployments'][0]['version'])
+            booted_timestamp = atomic_status['deployments'][0]['timestamp']
         else:
-            another_version = LooseVersion(item['version'])
-            another_timestamp = time.strptime(item['timestamp'], time_format)
+            not_booted_version = LooseVersion(atomic_status['deployments'][1]['version'])
+            not_booted_timestamp = atomic_status['deployments'][1]['timestamp']
 
-    if current_version < another_version:
+    if booted_version < not_booted_version:
         return True
-    if current_version == another_version:
-        if current_timestamp < another_timestamp:
+    if booted_version == not_booted_version:
+        if booted_timestamp < not_booted_timestamp:
             return True
 
     return False
 
 
 def get_atomic_host_tree_num(context):
-    return len(get_atomic_status(context))
+    return len(get_atomic_status(context)['deployments'])
 
 
 def find_mount_option(context, mount_option):
